@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ConvertWithAI — Sent Log</title>
+  <style>
+    body { font-family: -apple-system, Segoe UI, Arial, sans-serif; max-width: 900px; margin: 40px auto; color: #1a1a1a; }
+    a.back { font-size: 13px; color: #666; text-decoration: none; }
+    h1 { font-size: 20px; margin: 12px 0 20px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #eee; vertical-align: top; }
+    th { color: #666; font-weight: 600; font-size: 12px; text-transform: uppercase; }
+    .badge { display: inline-block; font-size: 12px; background: #eee; border-radius: 4px; padding: 2px 8px; }
+    .subject { color: #444; }
+    .empty { padding: 40px 0; text-align: center; color: #666; }
+  </style>
+</head>
+<body>
+  <a class="back" href="/">&larr; Back to dashboard</a>
+  <h1>Sent Log <span class="badge">{{ records|length }} shown</span></h1>
+
+  {% if not records %}
+    <div class="empty">No emails sent yet.</div>
+  {% else %}
+    <table>
+      <thead>
+        <tr><th>Sent At (UTC)</th><th>Day</th><th>Name</th><th>Email</th><th>Subject</th></tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td>{{ r.sent_at }}</td>
+          <td>{{ r.day }}</td>
+          <td>{{ r.name }}</td>
+          <td>{{ r.email }}</td>
+          <td class="subject">{{ r.subject }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</body>
+</html>

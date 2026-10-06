@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ConvertWithAI — Scrape Result</title>
+  <style>
+    body { font-family: -apple-system, Segoe UI, Arial, sans-serif; max-width: 720px; margin: 40px auto; color: #1a1a1a; }
+    a.back { font-size: 13px; color: #666; text-decoration: none; }
+    h1 { font-size: 20px; margin: 12px 0 20px 0; }
+    .box { border-radius: 8px; padding: 16px 18px; margin-bottom: 16px; font-size: 14px; }
+    .box.ok { background: #eafaf0; border: 1px solid #b7e6c9; }
+    .box.warn { background: #fff8e6; border: 1px solid #f0d989; }
+    .box.error { background: #fdeaea; border: 1px solid #f0b7b7; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #eee; }
+    th { color: #666; font-weight: 600; font-size: 12px; text-transform: uppercase; }
+    .empty-email { color: #999; font-style: italic; }
+  </style>
+</head>
+<body>
+  <a class="back" href="/">&larr; Back to dashboard</a>
+  <h1>Scrape Result</h1>
+
+  {% if error %}
+    <div class="box error">
+      <strong>Scrape/enrich failed.</strong><br>
+      {{ error }}
+    </div>
+  {% elif leads_saved == 0 and (not enrich_result or enrich_result.contacts_saved == 0) %}
+    <div class="box warn">
+      <strong>No new leads found in {{ city }}, {{ state }} this run.</strong><br>
+      This can mean Yellow Pages blocked the request (Cloudflare occasionally rejects the scraper —
+      check the terminal log for an "HTTP Error 403" line to confirm), or there genuinely weren't
+      any new listings across the categories tried this time. Safe to just try again.
+    </div>
+  {% else %}
+    <div class="box ok">
+      <strong>{{ leads_saved }}</strong> new lead{{ 's' if leads_saved != 1 else '' }} found in {{ city }}, {{ state }}{% if categories_tried %} across <strong>{{ categories_tried }}</strong> business categor{{ 'ies' if categories_tried != 1 else 'y' }}{% endif %}.
+      {% if enrich_result %}
+        Enrichment processed <strong>{{ enrich_result.leads_processed }}</strong> lead{{ 's' if enrich_result.leads_processed != 1 else '' }}
+        and found <strong>{{ enrich_result.contacts_saved }}</strong> contact{{ 's' if enrich_result.contacts_saved != 1 else '' }}
+        ({{ found_contacts | selectattr('email') | list | length }} with a verified email).
+        {% if enrich_result.duplicates_skipped %}
+          {{ enrich_result.duplicates_skipped }} duplicate contact{{ 's' if enrich_result.duplicates_skipped != 1 else '' }} skipped (already in database).
+        {% endif %}
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {% if found_contacts %}
+    <table>
+      <tr><th>Name</th><th>Title</th><th>Business</th><th>Email</th></tr>
+      {% for c in found_contacts %}
+        <tr>
+          <td>{{ c.name }}</td>
+          <td>{{ c.title or '—' }}</td>
+          <td>{{ c.business or '—' }}</td>
+          <td>{% if c.email %}{{ c.email }}{% else %}<span class="empty-email">no email found</span>{% endif %}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+</body>
+</html>

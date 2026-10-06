@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ConvertWithAI — Dashboard</title>
+  <style>
+    body { font-family: -apple-system, Segoe UI, Arial, sans-serif; max-width: 720px; margin: 60px auto; color: #1a1a1a; }
+    h1 { font-size: 22px; margin-bottom: 4px; }
+    p.sub { color: #666; margin-top: 0; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin: 16px 0; }
+    .card h2 { margin: 0 0 6px 0; font-size: 16px; }
+    .count { font-size: 13px; color: #666; margin-bottom: 12px; }
+    button, a.btn {
+      display: inline-block; background: #1a1a1a; color: #fff; border: none;
+      padding: 10px 18px; border-radius: 6px; font-size: 14px; cursor: pointer;
+      text-decoration: none;
+    }
+    button:hover, a.btn:hover { background: #333; }
+    form { display: inline; }
+    .note { font-size: 12px; color: #999; margin-top: 8px; }
+    .scrape-fields { display: flex; gap: 8px; margin-bottom: 10px; }
+    .scrape-fields select {
+      border: 1px solid #ccc; border-radius: 6px; padding: 8px 10px; font-size: 14px;
+      background: #fff; color: #1a1a1a;
+    }
+    .scrape-fields select[name="state"] { flex: 2; }
+    .scrape-fields select[name="city"] { flex: 3; }
+    .field-error { color: #b3261e; font-size: 12px; margin: -4px 0 10px 0; }
+  </style>
+</head>
+<body>
+  <h1>ConvertWithAI</h1>
+  <p class="sub">Local review-and-send dashboard — nothing sends without your approval.</p>
+
+  <div class="card">
+    <h2>1. Scrape Leads</h2>
+    <div class="count">Finds new small businesses across many categories in the city you choose, then extracts verified contacts (on-page emails only — no guessing).</div>
+    {% if scrape_error %}
+      <div class="field-error">{{ scrape_error }}</div>
+    {% endif %}
+    <form method="post" action="/scrape" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerText='Working — this can take a few minutes…';">
+      <div class="scrape-fields">
+        <select name="state" id="state-select" required onchange="populateCities()">
+          <option value="" disabled {{ 'selected' if not state_value else '' }}>State</option>
+          {% for abbr, full_name in us_states %}
+            <option value="{{ abbr }}" {{ 'selected' if abbr == state_value else '' }}>{{ full_name }} ({{ abbr }})</option>
+          {% endfor %}
+        </select>
+        <select name="city" id="city-select" required>
+          <option value="" disabled selected>City</option>
+        </select>
+      </div>
+      <button type="submit">Scrape Leads (up to {{ batch_size }})</button>
+    </form>
+  </div>
+
+  <script>
+    const STATE_CITIES = {{ state_cities | tojson }};
+
+    function populateCities(preselect) {
+      const stateSelect = document.getElementById('state-select');
+      const citySelect = document.getElementById('city-select');
+      const cities = STATE_CITIES[stateSelect.value] || [];
+      citySelect.innerHTML = '<option value="" disabled selected>City</option>';
+      cities.forEach(function (city) {
+        const opt = document.createElement('option');
+        opt.value = city;
+        opt.textContent = city;
+        if (preselect && city === preselect) opt.selected = true;
+        citySelect.appendChild(opt);
+      });
+    }
+
+    // Restore the previous state/city after a validation-error redirect back to this page.
+    document.addEventListener('DOMContentLoaded', function () {
+      if (document.getElementById('state-select').value) {
+        populateCities({{ city_value | tojson }});
+      }
+    });
+  </script>
+
+  <div class="card">
+    <h2>2. Generate &amp; Review Pitches</h2>
+    <div class="count">
+      {% if pending_drafts %}
+        {{ pending_drafts }} contact{{ 's' if pending_drafts != 1 else '' }} ready for review
+      {% else %}
+        {{ untouched }} untouched lead{{ 's' if untouched != 1 else '' }} with a verified email, not yet pitched
+      {% endif %}
+    </div>
+    <form method="post" action="/generate_review" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerText='Writing pitches…';">
+      <button type="submit">{{ "Continue Review" if pending_drafts else "Generate " ~ generate_batch ~ " Pitches" }}</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>3. Send Follow-ups</h2>
+    <div class="count">{{ pending_followups }} Day-3/7 follow-up{{ 's' if pending_followups != 1 else '' }} due</div>
+    <a class="btn" href="/followups">Review Follow-ups</a>
+  </div>
+
+  {% if flagged %}
+    <div class="card" style="border-color:#f0deae; background:#fffcf5;">
+      <h2>&#9888; Flagged</h2>
+      <div class="count">{{ flagged }} contact{{ 's' if flagged != 1 else '' }} failed AI grounding checks — quarantined, never sent</div>
+      <a class="btn" href="/flagged" style="background:#8a6100;">Review Flagged</a>
+    </div>
+  {% endif %}
+
+  <p class="note">
+    <a href="/sent">View Sent Log</a> — {{ sent_count }} email{{ 's' if sent_count != 1 else '' }} sent so far.
+    Replies are not shown here — check convertwithai11@gmail.com directly.
+  </p>
+</body>
+</html>
