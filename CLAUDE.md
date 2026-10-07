@@ -9,17 +9,18 @@
 
 - **Product**: Autonomous AI lead generation pipeline for real estate agents
 - **Stack**: Python 3.11, Playwright, Supabase, OpenAI GPT-4o-mini, Brevo SMTP, Flask, APScheduler, Telegram
-- **Scale Target**: 50-90 verified emails/day (decision makers only — see `docs/blueprint.md`); Brevo free plan caps sending at 300 emails/day; runs 24/7 unattended
-- **Cost Constraint**: ~$3/month operational — every token and API call counts
+- **Scale Target**: 50-90 verified emails/day (decision makers only — see `docs/blueprint.md`); Brevo free plan caps sending at 300 emails/day
+- **Operation**: runs on a daily schedule; every email is sent only after human approval (see `docs/adr/0001-human-approval-before-sending.md`)
 
 ---
 
 ## RANKED QUALITY ATTRIBUTES
 
-<!-- Ranking order proposed during architecture review; Warda to confirm or reorder. -->
+<!-- Order proposed during architecture review; cost target removed by Warda on 2026-10-07. -->
 1. **AI accuracy / grounding** — no AI-drafted email may state facts not in the lead's real scraped data (see `docs/grounding_pipeline.md`)
-2. **Run cost** — ~$3/month operational
-3. **Email deliverability** — plain text, domain warmup, verified addresses only (see `docs/blueprint.md`)
+2. **Email deliverability** — plain text, domain warmup, verified addresses only (see `docs/blueprint.md`)
+
+Not optimizing yet: a fixed monthly cost target (removed 2026-10-07; revisit after deployment).
 
 ---
 
@@ -27,7 +28,7 @@
 
 - Architecture decisions live in `docs/adr/` (template: `docs/adr/0000-template.md`). Follow accepted ADRs. If a change conflicts with an ADR, stop and ask; don't work around it.
 - Don't add new infrastructure services, databases or paid dependencies without an ADR.
-- Nothing sends an email without human approval on the review screen (see `docs/grounding_pipeline.md`).
+- Nothing sends an email without human approval on the review screen (see `docs/grounding_pipeline.md` and ADR-0001).
 - Plan first (plan mode) for any change that touches more than one component.
 - After a significant change, ask the `architect-reviewer` subagent to check it against the ADRs.
 
