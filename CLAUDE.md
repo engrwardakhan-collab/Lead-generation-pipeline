@@ -9,7 +9,7 @@
 
 - **Product**: Autonomous AI lead generation pipeline for real estate agents
 - **Stack**: Python 3.11, Playwright, Supabase, OpenAI GPT-4o-mini, Brevo SMTP, Flask, APScheduler, Telegram
-- **Scale Target**: 300 emails/day, 240-360 verified leads/day, runs 24/7 unattended
+- **Scale Target**: 50-90 verified emails/day (decision makers only — see `docs/blueprint.md`); Brevo free plan caps sending at 300 emails/day; runs 24/7 unattended
 - **Cost Constraint**: ~$3/month operational — every token and API call counts
 
 ---
